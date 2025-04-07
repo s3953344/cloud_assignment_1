@@ -1,6 +1,9 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { PutCommand, DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 
+// code based on AWS docs
+// https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/getting-started-step-2.html
+
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
 
