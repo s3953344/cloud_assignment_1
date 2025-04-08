@@ -1,26 +1,54 @@
 import { useState } from "react";
 import { FieldValues, useForm } from "react-hook-form";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./formValidation.css";
 
-// interface FormData {
-//   email: string;
-//   password: string;
-// }
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
 
-const emailPattern = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+// regex from https://regexr.com/3e48o
+const emailPattern = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
+
+// code adapted from https://docs.aws.amazon.com/code-library/latest/ug/dynamodb_example_dynamodb_GetItem_section.html
+
+const creds = { 
+  
+}
+
+const client = new DynamoDBClient({region: "us-east-1", "credentials": creds});
+// Create the DynamoDB Document Client
+const docClient = DynamoDBDocumentClient.from(client);
 
 export default function LoginPage() {
   const { register, handleSubmit, formState: { errors } } = useForm();
-  // const [data, setData] = useState("");
-  const onSubmit = (data: FieldValues) => {
-    console.log(data);
-  }
+  const navigate = useNavigate()
+  
+  const getLogin = async (data: FieldValues) => {
+    try {
+      const command = new GetCommand({
+        TableName: "login",
+        Key: {
+          "email": data.email,
+        },
+      });
+    
+      const response = await docClient.send(command);
+      if (response.Item?.password === data.password) {
+        console.log("Login successful!");
+        navigate("/");
+      } else {
+        console.log("Login failed. Username or password is incorrect.");
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      return null;
+    }
+  };
 
   return (
     <div className="login-page d-flex flex-column">
       <h1 className="text-4xl font-bold mb-4">Login</h1>
-      <form onSubmit={handleSubmit((data) => onSubmit(data))}>
+      <form onSubmit={handleSubmit((data) => getLogin(data))}>
         <div className="mb-4 d-flex flex-column">
           <label className="mb-2" htmlFor="email">
             Email
@@ -60,3 +88,6 @@ export default function LoginPage() {
     </div>
   )
 }
+
+
+
