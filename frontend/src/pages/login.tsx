@@ -7,18 +7,14 @@ import "./formValidation.css";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
 import creds from "frontend/src/credentials.json";
+import { useState } from "react";
 
 // regex from https://regexr.com/3e48o
 const emailPattern = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
 
-const PORT = 3000;
-
-// import fs from "fs";
-// import path from "path";
-// const credsPath = path.join(__dirname, "aws-creds.json");
-// const creds = JSON.parse(fs.readFileSync(credsPath, "utf-8"));
-
 export default function LoginPage() {
+  const [errorMsg, setErrorMsg] = useState<string>("");
+
   const {
     register,
     handleSubmit,
@@ -33,14 +29,6 @@ export default function LoginPage() {
 
   const getLogin = async (data: FieldValues) => {
     try {
-      // const res = await axios.get(`http://localhost:${PORT}/api/login`, {
-      //   params: { email: data.email, password: data.password },
-      // });
-
-      // if (res.data.password === data.password) {
-      //   navigate("/");
-      // }
-
       const command = new GetCommand({
         TableName: "login",
         Key: {
@@ -52,24 +40,16 @@ export default function LoginPage() {
     
       if (response.Item?.password === data.password) {
         console.log("Login successful!");
+        setErrorMsg("");
         navigate("/");
       } else {
-        console.log("Login failed. Username or password is incorrect.");
+        setErrorMsg("Login failed. Username or password is incorrect.");
       }
       
-
-      // console.log(res.data);
-
-      // data looks like this:
-      // data = {
-      //   email: email,
-      //   username: username,
-      //   password: password,
-      // }
-
     } catch (error) {
       console.error("Error fetching data:", error);
       // TODO: set error message
+      setErrorMsg(`Error fetching data: ${error}`);
     }
   };
 
@@ -116,6 +96,11 @@ export default function LoginPage() {
         <p className="mb-4">
           Don't have an account? Register <Link to="/register">here</Link>
         </p>
+        <div className="error-message | mb-4">
+          {
+            errorMsg !== "" && errorMsg
+          }
+        </div>
         <button type="submit" className="btn btn-primary">
           Login
         </button>
