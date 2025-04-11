@@ -20,7 +20,6 @@ export default function RegisterPage() {
   } = useForm();
   const navigate = useNavigate();
 
-  // const client = new DynamoDBClient({region: "us-east-1", "credentials": creds});
   const client = new DynamoDBClient({
     region: "us-east-1",
     credentials: creds,
