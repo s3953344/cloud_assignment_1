@@ -11,10 +11,10 @@ import { DynamoDBDocumentClient, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import creds from "frontend/src/credentials.json";
 
 interface QueryParams {
-  artist: string,
-  title: string,
-  album: string,
-  year: number,
+  artist: string;
+  title: string;
+  album: string;
+  year: number;
 }
 
 function App() {
@@ -25,7 +25,7 @@ function App() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm();
+  } = useForm<QueryParams>();
 
   const client = new DynamoDBClient({
     region: "us-east-1",
@@ -47,28 +47,33 @@ function App() {
 
   // based on AWS docs
   // https://docs.aws.amazon.com/code-library/latest/ug/dynamodb_example_dynamodb_Query_section.html
-  const handleQuery = async (data: FieldValues) => {
+  // https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Query.html#API_Query_Examples
+  const handleQuery = async (data: QueryParams) => {
     // check if at least one query field is added
     // console.log(data);
-    if (Object.values(data).every((val) => val === "")) {
-      console.log("Must have at least one parameter to query");
-      return;
+    try {
+      if (Object.values(data).every((val) => val === "")) {
+        console.log("Must have at least one parameter to query");
+        return;
+      }
+
+      // this one only works if only title is given! baby's first query.
+      const command = new QueryCommand({
+        TableName: "music",
+        KeyConditionExpression: "title = :v1",
+        ExpressionAttributeValues: {
+          ":v1": data.title,
+        },
+        ConsistentRead: true,
+      });
+
+      const response = await docClient.send(command);
+      console.log(response);
+      return response;
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      // setErrorMsg(`Error fetching data: ${error}`);
     }
-
-    //   const command = new QueryCommand({
-    //     TableName: "music",
-    //     KeyConditionExpression:
-    //       "OriginCountry = :originCountry AND RoastDate > :roastDate",
-    //     ExpressionAttributeValues: {
-    //       ":originCountry": "Ethiopia",
-    //       ":roastDate": "2023-05-01",
-    //     },
-    //     ConsistentRead: true,
-    //   });
-
-    //   const response = await docClient.send(command);
-    //   console.log(response);
-    //   return response;
   };
 
   return (
