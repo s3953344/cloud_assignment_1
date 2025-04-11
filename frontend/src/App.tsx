@@ -2,42 +2,45 @@ import { useEffect, useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
-import { useAuth } from './context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useAuth, USER_KEY } from './context/AuthContext';
+import { Link, useNavigate } from 'react-router-dom';
 
 function App() {
   const [count, setCount] = useState(0);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!isAuthenticated) { navigate("/login") }
   }, []);
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  }
   
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="home-page">
+      <NavBar handleLogout={handleLogout}></NavBar>
+      <h1>Music Subscription</h1>
+    </div>
+  )
+}
+
+const NavBar = ({handleLogout}: any) => {
+  const username = localStorage.getItem(USER_KEY);
+  return (
+    <div className="navbar py-3 px-5">
+      <div className="left d-flex gap-3">
+        <Link to="/login">Login</Link>
+        <Link to="/register">Register</Link>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
+      <div className="right d-flex gap-3">
+        <span>{username}</span>
+        <button className='btn btn-danger' onClick={handleLogout}>Logout</button>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    </div>
   )
 }
 
