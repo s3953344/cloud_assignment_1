@@ -3,8 +3,50 @@
   /* margin: 0 auto; */
   /* padding: 2rem; */
   /* align-items: center; */
+  min-height: 100vh;
 }
 
 .navbar {
   background-color: rgba(227, 227, 186, 0.933);
+}
+
+.home-page {
+  margin: 3rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.even-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  /* padding: 2rem; */
+  gap: 2rem;
+}
+
+.query-area {
+  display: flex;
+  flex-direction: column;
+}
+
+.query-area form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  /* padding: 1rem; */
+}
+
+.query-field {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.query-results {
+  display: flex;
+  flex-direction: column;
+
+  flex: 1;
+  border: solid 1px #888;
+  /* overflow-y: scroll; */
+
 }
