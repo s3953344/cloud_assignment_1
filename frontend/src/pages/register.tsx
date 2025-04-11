@@ -47,7 +47,7 @@ export default function RegisterPage() {
         TableName: "login",
         Item: {
           email: data.email,
-          username: data.username,
+          user_name: data.user_name,
           password: data.password,
         },
       });
@@ -89,17 +89,17 @@ export default function RegisterPage() {
           )}
         </div>
         <div className="mb-4 d-flex flex-column">
-          <label className="mb-2" htmlFor="username">
+          <label className="mb-2" htmlFor="user_name">
             Username
           </label>
           <input
-            {...register("username", { required: true })}
+            {...register("user_name", { required: true })}
             type="text"
-            id="username"
+            id="user_name"
             className="form-control"
             placeholder="Enter your username"
           />
-          {errors.username && (
+          {errors.user_name && (
             <span role="alert" className="error-message">
               Enter a valid username
             </span>
