@@ -5,6 +5,8 @@ import { readFile } from 'node:fs/promises';
 // code based on AWS docs
 // https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/getting-started-step-2.html
 
+// node insert_music.js to run
+
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
 

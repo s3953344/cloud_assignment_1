@@ -3,6 +3,8 @@ import { CreateTableCommand, DynamoDBClient } from "@aws-sdk/client-dynamodb";
 // code modified from AWS Docs
 // https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/getting-started-step-1.html
 
+// node create_music_table.js to run
+
 const client = new DynamoDBClient({});
 
 export const main = async () => {
@@ -13,21 +15,22 @@ export const main = async () => {
     // https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.LowLevelAPI.html#Programming.LowLevelAPI.DataTypeDescriptors
     AttributeDefinitions: [
       {
-        AttributeName: "artist",
+        AttributeName: "title",
         AttributeType: "S",
       },
       {
-        AttributeName: "title",
+        AttributeName: "album",
         AttributeType: "S",
       },
     ],
     KeySchema: [
+      // we choose title for PK for its high cardinality
       {
-        AttributeName: "artist",
+        AttributeName: "title",
         KeyType: "HASH",
       },
       {
-        AttributeName: "title",
+        AttributeName: "album",
         KeyType: "RANGE",
       },
     ],
