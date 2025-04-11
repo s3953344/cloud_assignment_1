@@ -3,10 +3,20 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./formValidation.css";
 
+
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
+import creds from "frontend/src/credentials.json";
+
 // regex from https://regexr.com/3e48o
 const emailPattern = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
 
 const PORT = 3000;
+
+// import fs from "fs";
+// import path from "path";
+// const credsPath = path.join(__dirname, "aws-creds.json");
+// const creds = JSON.parse(fs.readFileSync(credsPath, "utf-8"));
 
 export default function LoginPage() {
   const {
@@ -16,15 +26,37 @@ export default function LoginPage() {
   } = useForm();
   const navigate = useNavigate();
 
+  // const client = new DynamoDBClient({region: "us-east-1", "credentials": creds});
+  const client = new DynamoDBClient({region: "us-east-1", "credentials": creds});
+  // Create the DynamoDB Document Client
+  const docClient = DynamoDBDocumentClient.from(client);
+
   const getLogin = async (data: FieldValues) => {
     try {
-      const res = await axios.get(`http://localhost:${PORT}/api/login`, {
-        params: { email: data.email, password: data.password },
-      });
+      // const res = await axios.get(`http://localhost:${PORT}/api/login`, {
+      //   params: { email: data.email, password: data.password },
+      // });
 
-      if (res.data.password === data.password) {
+      // if (res.data.password === data.password) {
+      //   navigate("/");
+      // }
+
+      const command = new GetCommand({
+        TableName: "login",
+        Key: {
+          "email": data.email,
+        },
+      });
+    
+      const response = await docClient.send(command);
+    
+      if (response.Item?.password === data.password) {
+        console.log("Login successful!");
         navigate("/");
+      } else {
+        console.log("Login failed. Username or password is incorrect.");
       }
+      
 
       // console.log(res.data);
 
