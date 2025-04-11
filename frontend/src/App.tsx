@@ -10,6 +10,7 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
   DynamoDBDocumentClient,
   QueryCommand,
+  ScanCommand,
   QueryCommandInput,
 } from "@aws-sdk/lib-dynamodb";
 import creds from "frontend/src/credentials.json";
@@ -62,7 +63,15 @@ export default function App() {
         return null;
       }
 
-      const command = createQueryCommand(data);
+      let command;
+      if (data.title || data.album || data.artist) {
+        // all of these three have an index (main table or GSI)
+        command = createQueryCommand(data);
+      } else {
+        // if only year is selected, then we do a scan
+        command = createScanCommand(data);
+      }
+
       const response = await docClient.send(command);
       console.log(response);
       return response;
@@ -183,10 +192,19 @@ const createQueryCommand = (data: QueryParams) => {
   if (data.year) {
     command.FilterExpression = "#year = :yearVal";
     command.ExpressionAttributeValues![":yearVal"] = data.year;
-    command.ExpressionAttributeNames = {"#year": data.year.toString()}
-
+    command.ExpressionAttributeNames = {"#year": "year"}
   }
 
   console.log(command);
   return new QueryCommand(command);
 };
+
+// if ONLY year is queried
+const createScanCommand = (data: QueryParams) => {
+  return new ScanCommand({
+    TableName: "music",
+    FilterExpression: "#year = :yearVal",
+    ExpressionAttributeValues: {":yearVal": data.year.toString()},
+    ExpressionAttributeNames: {"#year": "year"}
+  })
+}
