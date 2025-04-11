@@ -7,7 +7,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { FieldValues, useForm } from "react-hook-form";
 
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import {
+  DynamoDBDocumentClient,
+  QueryCommand,
+  QueryCommandInput,
+} from "@aws-sdk/lib-dynamodb";
 import creds from "frontend/src/credentials.json";
 
 interface QueryParams {
@@ -17,7 +21,7 @@ interface QueryParams {
   year: number;
 }
 
-function App() {
+export default function App() {
   const [queryResults, setQueryResults] = useState<any>(null);
   const { isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
@@ -42,6 +46,7 @@ function App() {
 
   const handleLogout = () => {
     logout();
+    setQueryResults(null);
     navigate("/login");
   };
 
@@ -54,19 +59,10 @@ function App() {
     try {
       if (Object.values(data).every((val) => val === "")) {
         console.log("Must have at least one parameter to query");
-        return;
+        return null;
       }
 
-      // this one only works if only title is given! baby's first query.
-      const command = new QueryCommand({
-        TableName: "music",
-        KeyConditionExpression: "title = :v1",
-        ExpressionAttributeValues: {
-          ":v1": data.title,
-        },
-        ConsistentRead: true,
-      });
-
+      const command = createQueryCommand(data);
       const response = await docClient.send(command);
       console.log(response);
       return response;
@@ -81,6 +77,7 @@ function App() {
       <NavBar handleLogout={handleLogout}></NavBar>
       <div className="home-page">
         <h1>Music Subscription</h1>
+        <small>Please note, search is case sensitive!</small>
 
         <div className="even-columns">
           <div className="query-area">
@@ -140,4 +137,56 @@ const NavBar = ({ handleLogout }: any) => {
   );
 };
 
-export default App;
+// music table has PK title and SK album
+// current GSI created are:
+// album-title-index
+// artist-title-index
+// CONTRACT: at least one of title, album or artist is filled
+const createQueryCommand = (data: QueryParams) => {
+  const command: QueryCommandInput = {
+    TableName: "music",
+    ConsistentRead: true,
+  };
+
+  // if a title is supplied, always use that to search
+  if (data.title) {
+    console.log("Using base table query");
+    command.KeyConditionExpression = "title = :titleVal";
+    command.ExpressionAttributeValues = {":titleVal": data.title};
+    if (data.album) {
+      command.KeyConditionExpression += " AND album = :albumVal";
+      command.ExpressionAttributeValues[":albumVal"] = data.album;
+    }
+    if (data.artist) {
+      command.FilterExpression = "artist = :artistVal";
+      command.ExpressionAttributeValues[":artistVal"] = data.artist;
+      // command.ExpressionAttributeValues
+    }
+    
+  } else if (data.artist) {
+    console.log("Using artist index");
+    command.IndexName = "artist-title-index"
+    command.KeyConditionExpression = "artist = :artistVal";
+    command.ExpressionAttributeValues = {":artistVal": data.artist };
+    
+    if (data.album) {
+      command.FilterExpression = "album = :albumVal";
+      command.ExpressionAttributeValues[":albumVal"] = data.album;
+    }
+  } else if (data.album) {
+    console.log("Using album index");
+    command.IndexName = "album-title-index"
+    command.KeyConditionExpression = "album = :albumVal";
+    command.ExpressionAttributeValues = {":albumVal": data.album };
+  }
+  
+  if (data.year) {
+    command.FilterExpression = "#year = :yearVal";
+    command.ExpressionAttributeValues![":yearVal"] = data.year;
+    command.ExpressionAttributeNames = {"#year": data.year.toString()}
+
+  }
+
+  console.log(command);
+  return new QueryCommand(command);
+};
