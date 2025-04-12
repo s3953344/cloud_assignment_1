@@ -18,6 +18,7 @@ import {
 import creds from "frontend/src/credentials.json";
 import NavBar from "./components/NavBar";
 import SongList, { Song } from "./components/SongList";
+import SubscriptionList, { Subscription } from "./components/SubscribedList";
 
 interface QueryParams {
   artist: string;
@@ -26,13 +27,20 @@ interface QueryParams {
   year: number;
 }
 
-type QueryResults = ScanCommandOutput | QueryCommandOutput | { Count: number, Items: Array<Song> };
-type SubscriptionResults = QueryCommandOutput | { Count: number, Items: Array<any> };
-const QUERY_RESULT_DEFAULT = {Count: -1, Items: []};
+type QueryResults =
+  | ScanCommandOutput
+  | QueryCommandOutput
+  | { Count: number; Items: Array<Song> };
+type SubscriptionResults =
+  | QueryCommandOutput
+  | { Count: number; Items: Array<Subscription> };
+const QUERY_RESULT_DEFAULT = { Count: -1, Items: [] };
 
 export default function App() {
-  const [subscriptionResults, setSubscriptionResults] = useState<SubscriptionResults>(QUERY_RESULT_DEFAULT);
-  const [queryResults, setQueryResults] = useState<QueryResults>(QUERY_RESULT_DEFAULT);
+  const [subscriptionResults, setSubscriptionResults] =
+    useState<SubscriptionResults>(QUERY_RESULT_DEFAULT);
+  const [queryResults, setQueryResults] =
+    useState<QueryResults>(QUERY_RESULT_DEFAULT);
   const [queryError, setQueryError] = useState<string>("");
 
   const { isAuthenticated, logout } = useAuth();
@@ -53,21 +61,23 @@ export default function App() {
   useEffect(() => {
     if (!isAuthenticated) {
       navigate("/login");
-      return
+      return;
     }
 
     const fetchSubscriptions = async () => {
       try {
         const userObj = localStorage.getItem(USER_KEY);
-        if (!userObj) { return }
+        if (!userObj) {
+          return;
+        }
         const email = JSON.parse(userObj).email;
         const getSubsCommand = new QueryCommand({
           TableName: "subscription",
           KeyConditionExpression: "email = :emailVal",
-          ExpressionAttributeValues: {":emailVal": email}
-        })
+          ExpressionAttributeValues: { ":emailVal": email },
+        });
         const response = await docClient.send(getSubsCommand);
-        console.log(response)
+        console.log(response);
         setSubscriptionResults(response);
       } catch (error) {
         console.error("Error fetching subscription data:", error);
@@ -75,7 +85,7 @@ export default function App() {
         // too lazy to create a new error element for subscription haha
         setQueryError(`${error}`);
       }
-    }
+    };
 
     fetchSubscriptions();
   }, []);
@@ -125,58 +135,76 @@ export default function App() {
       <div className="home-page">
         <h1>Music Subscription</h1>
         <small>Please note, search is case sensitive!</small>
+        <div className="error-message">{queryError && queryError}</div>
 
         <div className="even-columns">
           <div className="query-area">
             <h2>Query</h2>
-            <form className="mb-4" onSubmit={handleSubmit((data) => handleQuery(data))}>
+            <form
+              className="mb-4"
+              onSubmit={handleSubmit((data) => handleQuery(data))}
+            >
               <div className="query-field">
                 <label htmlFor="artist">Artist</label>
-                <input {...register("artist")} className="form-control" id="artist" type="text" />
+                <input
+                  {...register("artist")}
+                  className="form-control"
+                  id="artist"
+                  type="text"
+                />
               </div>
               <div className="query-field">
                 <label htmlFor="title">Title</label>
-                <input {...register("title")} className="form-control" id="title" type="text" />
+                <input
+                  {...register("title")}
+                  className="form-control"
+                  id="title"
+                  type="text"
+                />
               </div>
               <div className="query-field">
                 <label htmlFor="album">Album</label>
-                <input {...register("album")} className="form-control" id="album" type="text" />
+                <input
+                  {...register("album")}
+                  className="form-control"
+                  id="album"
+                  type="text"
+                />
               </div>
               <div className="query-field">
                 <label htmlFor="year">Year</label>
-                <input {...register("year")} className="form-control" id="year" type="number" />
+                <input
+                  {...register("year")}
+                  className="form-control"
+                  id="year"
+                  type="number"
+                />
               </div>
               <button type="submit" className="submit-query-btn btn btn-info">
                 Query
               </button>
-              <div className="error-message">
-                {
-                  queryError && queryError
-                }
-              </div>
             </form>
             <div className="query-results | px-2 border">
-              {queryResults === QUERY_RESULT_DEFAULT && "Enter at least one field and press query to search for music"}
-              {queryResults.Count === 0 && "No result is retrieved. Please query again"}
-              {
-                (queryResults.Count! > 0 && queryResults.Items) && 
+              {queryResults === QUERY_RESULT_DEFAULT &&
+                "Enter at least one field and press query to search for music"}
+              {queryResults.Count === 0 &&
+                "No result is retrieved. Please query again"}
+              {queryResults.Count! > 0 && queryResults.Items && (
                 <SongList songs={queryResults.Items} />
-              }
+              )}
             </div>
           </div>
 
           <div className="subscription-area">
             <h2>Subscriptions</h2>
             <div className="subscription-results">
-              {subscriptionResults.Count === 0 && "No result is retrieved. Please query again"}
-              {subscriptionResults.Count! > 0 && 
-                subscriptionResults.Items!.map((song) => {
-                  return (
-                    <div className="song-key">{song.SK}</div>
-                  )
-                })
-              }
-              
+              {subscriptionResults === QUERY_RESULT_DEFAULT &&
+                "No current music subscriptions. Search for music to subscribe to on your left!"}
+              {subscriptionResults.Count === 0 &&
+                "No result is retrieved. Please query again"}
+              {subscriptionResults.Count! > 0 && subscriptionResults.Items && (
+                <SubscriptionList subscriptions={subscriptionResults.Items} />
+              )}
             </div>
           </div>
         </div>
@@ -184,8 +212,6 @@ export default function App() {
     </>
   );
 }
-
-
 
 // music table has PK title and SK album
 // current GSI created are:
@@ -201,7 +227,7 @@ const createQueryCommand = (data: QueryParams) => {
   if (data.title) {
     console.log("Using base table query");
     command.KeyConditionExpression = "title = :titleVal";
-    command.ExpressionAttributeValues = {":titleVal": data.title};
+    command.ExpressionAttributeValues = { ":titleVal": data.title };
     command.ConsistentRead = true;
     if (data.album) {
       command.KeyConditionExpression += " AND album = :albumVal";
@@ -212,28 +238,27 @@ const createQueryCommand = (data: QueryParams) => {
       command.ExpressionAttributeValues[":artistVal"] = data.artist;
       // command.ExpressionAttributeValues
     }
-    
   } else if (data.artist) {
     console.log("Using artist index");
-    command.IndexName = "artist-title-index"
+    command.IndexName = "artist-title-index";
     command.KeyConditionExpression = "artist = :artistVal";
-    command.ExpressionAttributeValues = {":artistVal": data.artist };
-    
+    command.ExpressionAttributeValues = { ":artistVal": data.artist };
+
     if (data.album) {
       command.FilterExpression = "album = :albumVal";
       command.ExpressionAttributeValues[":albumVal"] = data.album;
     }
   } else if (data.album) {
     console.log("Using album index");
-    command.IndexName = "album-title-index"
+    command.IndexName = "album-title-index";
     command.KeyConditionExpression = "album = :albumVal";
-    command.ExpressionAttributeValues = {":albumVal": data.album };
+    command.ExpressionAttributeValues = { ":albumVal": data.album };
   }
-  
+
   if (data.year) {
     command.FilterExpression = "#year = :yearVal";
     command.ExpressionAttributeValues![":yearVal"] = data.year;
-    command.ExpressionAttributeNames = {"#year": "year"}
+    command.ExpressionAttributeNames = { "#year": "year" };
   }
 
   console.log(command);
@@ -246,7 +271,7 @@ const createScanCommand = (data: QueryParams) => {
   return new ScanCommand({
     TableName: "music",
     FilterExpression: "#year = :yearVal",
-    ExpressionAttributeValues: {":yearVal": data.year.toString()},
-    ExpressionAttributeNames: {"#year": "year"}
-  })
-}
+    ExpressionAttributeValues: { ":yearVal": data.year.toString() },
+    ExpressionAttributeNames: { "#year": "year" },
+  });
+};
