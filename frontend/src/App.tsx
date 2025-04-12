@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
-import "./App.css";
 import { useAuth, USER_KEY } from "./context/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
-import { FieldValues, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
+
+import "./App.css";
+import "./pages/formValidation.css";
 
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
@@ -12,6 +12,8 @@ import {
   QueryCommand,
   ScanCommand,
   QueryCommandInput,
+  ScanCommandOutput,
+  QueryCommandOutput,
 } from "@aws-sdk/lib-dynamodb";
 import creds from "frontend/src/credentials.json";
 
@@ -22,8 +24,13 @@ interface QueryParams {
   year: number;
 }
 
+type QueryResults = ScanCommandOutput | QueryCommandOutput | { Count: number };
+const QUERY_RESULT_DEFAULT = {Count: -1};
+
 export default function App() {
-  const [queryResults, setQueryResults] = useState<any>(null);
+  const [queryResults, setQueryResults] = useState<QueryResults>(QUERY_RESULT_DEFAULT);
+  const [queryError, setQueryError] = useState<string>("");
+
   const { isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const {
@@ -47,7 +54,7 @@ export default function App() {
 
   const handleLogout = () => {
     logout();
-    setQueryResults(null);
+    setQueryResults(QUERY_RESULT_DEFAULT);
     navigate("/login");
   };
 
@@ -74,9 +81,14 @@ export default function App() {
 
       const response = await docClient.send(command);
       console.log(response);
-      return response;
+      // return response;
+      setQueryResults(response);
+      setQueryError("");
     } catch (error) {
       console.error("Error fetching data:", error);
+      setQueryResults(QUERY_RESULT_DEFAULT);
+      setQueryError(`${error}`);
+
       // setErrorMsg(`Error fetching data: ${error}`);
     }
   };
@@ -111,11 +123,16 @@ export default function App() {
               <button type="submit" className="btn btn-info">
                 Query
               </button>
+              <div className="error-message">
+                {
+                  queryError && queryError
+                }
+              </div>
             </form>
             <div className="query-results">
-              {queryResults !== null
-                ? queryResults
-                : "No result is retrieved. Please query again"}
+              {queryResults === QUERY_RESULT_DEFAULT && "Enter at least one field and press query to search for music"}
+              {queryResults?.Count === 0 && "No result is retrieved. Please query again"}
+              {(queryResults.Count && queryResults.Count > 0) && "Show results here"}
             </div>
           </div>
 
