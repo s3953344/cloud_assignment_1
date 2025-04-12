@@ -7,6 +7,7 @@ import {
   ScanCommandOutput,
   QueryCommandOutput,
   PutCommand,
+  DeleteCommand,
 } from "@aws-sdk/lib-dynamodb";
 import creds from "frontend/src/credentials.json";
 import { USER_KEY } from "../context/AuthContext";
@@ -14,7 +15,7 @@ import { useState } from "react";
 
 export type Subscription = {
   email?: string;
-  sk?: string;
+  SK?: string;
   year?: string;
   album?: string;
   artist?: string;
@@ -31,7 +32,7 @@ type SubscriptionListProps = {
 // https://docs.aws.amazon.com/AmazonS3/latest/userguide/example-bucket-policies.html#example-bucket-policies-anonymous-user
 
 function SubscriptionItem({ subscription }: { subscription: Subscription }) {
-  const [disableSubscribe, setDisableSubscribe] = useState<boolean>(false);
+  const [disableUnsubscribe, setDisableUnsubscribe] = useState<boolean>(false);
   const S3_URL = "https://song-images-s3953344.s3.us-east-1.amazonaws.com/";
   const parts = subscription.img_url?.split("/");
   const last = parts?.[parts.length - 1];
@@ -46,33 +47,28 @@ function SubscriptionItem({ subscription }: { subscription: Subscription }) {
 
   const handleUnubscribe = async () => {
     try {
-      // // user must be logged in
-      // const user = localStorage.getItem(USER_KEY);
-      // if (!user) { 
-      //   console.log("User must be logged in to subscribe!")
-      //   return;
-      // }
-      // const userEmail = JSON.parse(user).email;
-  
-      // const command = new PutCommand({
-      //   TableName: "subscription",
-      //   Item: {
-      //     email: userEmail,
-      //     // title::album creates the song primary key
-      //     SK: createSongKey(subscription.title!, subscription.album!),
-      //     title: subscription.title,
-      //     album: subscription.album,
-      //     artist: subscription.artist,
-      //     year: subscription.year,
-      //     img_url: subscription.img_url,
-      //   }
-      // })
-      // const response = await docClient.send(command);
-      // console.log("Put new subscription")
-      // console.log(response);
-      // if (response.$metadata.httpStatusCode === 200) {
-      //   setDisableSubscribe(true);
-      // }
+      // user must be logged in
+      const user = localStorage.getItem(USER_KEY);
+      if (!user) { 
+        console.log("User must be logged in to unsubscribe!")
+        return;
+      }
+      
+      const command = new DeleteCommand({
+        TableName: "subscription",
+        Key: {
+          email: subscription.email,
+          SK: subscription.SK,
+        }
+      })
+      console.log(command)
+      const response = await docClient.send(command);
+      console.log("Remove subscription")
+      console.log(response);
+      if (response.$metadata.httpStatusCode === 200) {
+        // setDisableUnsubscribe(true);
+        // TODO: remove the item from subscriptionResults!
+      }
     } catch (error) {
       console.error("Error unsubscribing:", error);
     }
@@ -95,7 +91,7 @@ function SubscriptionItem({ subscription }: { subscription: Subscription }) {
         <p className="mb-0 text-muted">{subscription.year}</p>
       </div>
       <div className="col-auto">
-        <button onClick={handleUnubscribe} disabled={disableSubscribe} className="btn btn-danger">Unsubscribe</button>
+        <button onClick={handleUnubscribe} disabled={disableUnsubscribe} className="btn btn-danger">Remove</button>
       </div>
     </div>
   );

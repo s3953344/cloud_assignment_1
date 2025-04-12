@@ -134,12 +134,12 @@ export default function App() {
       <NavBar handleLogout={handleLogout}></NavBar>
       <div className="home-page">
         <h1>Music Subscription</h1>
-        <small>Please note, search is case sensitive!</small>
         <div className="error-message">{queryError && queryError}</div>
 
         <div className="even-columns">
           <div className="query-area">
             <h2>Query</h2>
+            <small className="mb-4">Please note, search is case sensitive!</small>
             <form
               className="mb-4"
               onSubmit={handleSubmit((data) => handleQuery(data))}
@@ -197,7 +197,7 @@ export default function App() {
 
           <div className="subscription-area">
             <h2>Subscriptions</h2>
-            <div className="subscription-results">
+            <div className="subscription-results | px-2 border">
               {subscriptionResults === QUERY_RESULT_DEFAULT &&
                 "No current music subscriptions. Search for music to subscribe to on your left!"}
               {subscriptionResults.Count === 0 &&
