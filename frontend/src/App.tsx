@@ -154,7 +154,6 @@ const NavBar = ({ handleLogout }: any) => {
 const createQueryCommand = (data: QueryParams) => {
   const command: QueryCommandInput = {
     TableName: "music",
-    ConsistentRead: true,
   };
 
   // if a title is supplied, always use that to search
@@ -162,6 +161,7 @@ const createQueryCommand = (data: QueryParams) => {
     console.log("Using base table query");
     command.KeyConditionExpression = "title = :titleVal";
     command.ExpressionAttributeValues = {":titleVal": data.title};
+    command.ConsistentRead = true;
     if (data.album) {
       command.KeyConditionExpression += " AND album = :albumVal";
       command.ExpressionAttributeValues[":albumVal"] = data.album;
@@ -201,6 +201,7 @@ const createQueryCommand = (data: QueryParams) => {
 
 // if ONLY year is queried
 const createScanCommand = (data: QueryParams) => {
+  console.log("Using table scan");
   return new ScanCommand({
     TableName: "music",
     FilterExpression: "#year = :yearVal",
