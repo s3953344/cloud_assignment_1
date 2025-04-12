@@ -25,13 +25,14 @@ export type Subscription = {
 
 type SubscriptionListProps = {
   subscriptions: Subscription[];
+  setSubscriptions: React.Dispatch<React.SetStateAction<Subscription[]>>;
 };
 
 // S3 bucket image permissions
 // read-only public access
 // https://docs.aws.amazon.com/AmazonS3/latest/userguide/example-bucket-policies.html#example-bucket-policies-anonymous-user
 
-function SubscriptionItem({ subscription }: { subscription: Subscription }) {
+function SubscriptionItem({ subscription, setSubscriptions }: { subscription: Subscription, setSubscriptions: React.Dispatch<React.SetStateAction<Subscription[]>> }) {
   const [disableUnsubscribe, setDisableUnsubscribe] = useState<boolean>(false);
   const S3_URL = "https://song-images-s3953344.s3.us-east-1.amazonaws.com/";
   const parts = subscription.img_url?.split("/");
@@ -49,30 +50,33 @@ function SubscriptionItem({ subscription }: { subscription: Subscription }) {
     try {
       // user must be logged in
       const user = localStorage.getItem(USER_KEY);
-      if (!user) { 
-        console.log("User must be logged in to unsubscribe!")
+      if (!user) {
+        console.log("User must be logged in to unsubscribe!");
         return;
       }
-      
+
       const command = new DeleteCommand({
         TableName: "subscription",
         Key: {
           email: subscription.email,
           SK: subscription.SK,
-        }
-      })
-      console.log(command)
+        },
+      });
+      console.log(command);
       const response = await docClient.send(command);
-      console.log("Remove subscription")
+      console.log("Remove subscription");
       console.log(response);
       if (response.$metadata.httpStatusCode === 200) {
-        // setDisableUnsubscribe(true);
+        setDisableUnsubscribe(true);
         // TODO: remove the item from subscriptionResults!
+        setSubscriptions(prev =>
+          prev.filter(s => !(s.email === subscription.email && s.SK === subscription.SK))
+        );
       }
     } catch (error) {
       console.error("Error unsubscribing:", error);
     }
-  }
+  };
 
   return (
     <div className="row align-items-center border mb-3 p-3">
@@ -91,18 +95,29 @@ function SubscriptionItem({ subscription }: { subscription: Subscription }) {
         <p className="mb-0 text-muted">{subscription.year}</p>
       </div>
       <div className="col-auto">
-        <button onClick={handleUnubscribe} disabled={disableUnsubscribe} className="btn btn-danger">Remove</button>
+        <button
+          onClick={handleUnubscribe}
+          disabled={disableUnsubscribe}
+          className="btn btn-danger"
+        >
+          Remove
+        </button>
       </div>
     </div>
   );
 }
 
-// const SongList: React.FC<SongListProps> = ({ songs }) => {
-function SubscriptionList({ subscriptions }: SubscriptionListProps) {
+function SubscriptionList({ subscriptions, setSubscriptions }: SubscriptionListProps) {
   return (
     <div className="container my-4">
       {subscriptions.map((subscription) => {
-        return <SubscriptionItem key={""} subscription={subscription}/>
+        return (
+          <SubscriptionItem
+            key={subscription.SK}
+            subscription={subscription}
+            setSubscriptions={setSubscriptions}
+          />
+        );
       })}
     </div>
   );

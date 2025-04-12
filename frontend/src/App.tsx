@@ -31,14 +31,15 @@ type QueryResults =
   | ScanCommandOutput
   | QueryCommandOutput
   | { Count: number; Items: Array<Song> };
-type SubscriptionResults =
-  | QueryCommandOutput
-  | { Count: number; Items: Array<Subscription> };
+// type SubscriptionResults =
+//   | QueryCommandOutput
+//   | { Count: number; Items: Array<Subscription> };
 const QUERY_RESULT_DEFAULT = { Count: -1, Items: [] };
+const SUB_RESULT_DEFAULT: Subscription[] = [];
 
 export default function App() {
   const [subscriptionResults, setSubscriptionResults] =
-    useState<SubscriptionResults>(QUERY_RESULT_DEFAULT);
+    useState<Subscription[]>(SUB_RESULT_DEFAULT);
   const [queryResults, setQueryResults] =
     useState<QueryResults>(QUERY_RESULT_DEFAULT);
   const [queryError, setQueryError] = useState<string>("");
@@ -78,10 +79,14 @@ export default function App() {
         });
         const response = await docClient.send(getSubsCommand);
         console.log(response);
-        setSubscriptionResults(response);
+        if (response.Items === undefined) {
+          setSubscriptionResults([]);
+        } else {
+          setSubscriptionResults(response.Items);
+        }
       } catch (error) {
         console.error("Error fetching subscription data:", error);
-        setSubscriptionResults(QUERY_RESULT_DEFAULT);
+        setSubscriptionResults(SUB_RESULT_DEFAULT);
         // too lazy to create a new error element for subscription haha
         setQueryError(`${error}`);
       }
@@ -91,8 +96,9 @@ export default function App() {
   }, []);
 
   const handleLogout = () => {
-    logout();
     setQueryResults(QUERY_RESULT_DEFAULT);
+    setSubscriptionResults(SUB_RESULT_DEFAULT);
+    logout();
     navigate("/login");
   };
 
@@ -198,12 +204,12 @@ export default function App() {
           <div className="subscription-area">
             <h2>Subscriptions</h2>
             <div className="subscription-results | px-2 border">
-              {subscriptionResults === QUERY_RESULT_DEFAULT &&
+              {subscriptionResults === SUB_RESULT_DEFAULT &&
                 "No current music subscriptions. Search for music to subscribe to on your left!"}
-              {subscriptionResults.Count === 0 &&
-                "No result is retrieved. Please query again"}
-              {subscriptionResults.Count! > 0 && subscriptionResults.Items && (
-                <SubscriptionList subscriptions={subscriptionResults.Items} />
+              {subscriptionResults.length === 0 &&
+                "No result is retrieved. Subscribe to some music first!"}
+              {subscriptionResults.length > 0 && (
+                <SubscriptionList subscriptions={subscriptionResults} setSubscriptions={setSubscriptionResults}  />
               )}
             </div>
           </div>
