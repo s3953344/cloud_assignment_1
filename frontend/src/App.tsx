@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "./context/AuthContext";
+import { useAuth, USER_KEY } from "./context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 
@@ -27,9 +27,11 @@ interface QueryParams {
 }
 
 type QueryResults = ScanCommandOutput | QueryCommandOutput | { Count: number, Items: Array<Song> };
+type SubscriptionResults = QueryCommandOutput | { Count: number, Items: Array<any> };
 const QUERY_RESULT_DEFAULT = {Count: -1, Items: []};
 
 export default function App() {
+  const [subscriptionResults, setSubscriptionResults] = useState<SubscriptionResults>(QUERY_RESULT_DEFAULT);
   const [queryResults, setQueryResults] = useState<QueryResults>(QUERY_RESULT_DEFAULT);
   const [queryError, setQueryError] = useState<string>("");
 
@@ -51,7 +53,31 @@ export default function App() {
   useEffect(() => {
     if (!isAuthenticated) {
       navigate("/login");
+      return
     }
+
+    const fetchSubscriptions = async () => {
+      try {
+        const userObj = localStorage.getItem(USER_KEY);
+        if (!userObj) { return }
+        const email = JSON.parse(userObj).email;
+        const getSubsCommand = new QueryCommand({
+          TableName: "subscription",
+          KeyConditionExpression: "email = :emailVal",
+          ExpressionAttributeValues: {":emailVal": email}
+        })
+        const response = await docClient.send(getSubsCommand);
+        console.log(response)
+        setSubscriptionResults(response);
+      } catch (error) {
+        console.error("Error fetching subscription data:", error);
+        setSubscriptionResults(QUERY_RESULT_DEFAULT);
+        // too lazy to create a new error element for subscription haha
+        setQueryError(`${error}`);
+      }
+    }
+
+    fetchSubscriptions();
   }, []);
 
   const handleLogout = () => {
@@ -87,11 +113,9 @@ export default function App() {
       setQueryResults(response);
       setQueryError("");
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("Error fetching song data:", error);
       setQueryResults(QUERY_RESULT_DEFAULT);
       setQueryError(`${error}`);
-
-      // setErrorMsg(`Error fetching data: ${error}`);
     }
   };
 
@@ -143,6 +167,17 @@ export default function App() {
 
           <div className="subscription-area">
             <h2>Subscriptions</h2>
+            <div className="subscription-results">
+              {subscriptionResults.Count === 0 && "No result is retrieved. Please query again"}
+              {subscriptionResults.Count! > 0 && 
+                subscriptionResults.Items!.map((song) => {
+                  return (
+                    <div className="song-key">{song.SK}</div>
+                  )
+                })
+              }
+              
+            </div>
           </div>
         </div>
       </div>

@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { USER_KEY } from "../context/AuthContext";
 
 const NavBar = ({ handleLogout }: any) => {
-  const username = localStorage.getItem(USER_KEY);
+  const username = JSON.parse(localStorage.getItem(USER_KEY)!).username;
   return (
     <div className="navbar py-3 px-5">
       <div className="left d-flex gap-3">
