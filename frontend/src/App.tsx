@@ -16,6 +16,8 @@ import {
   QueryCommandOutput,
 } from "@aws-sdk/lib-dynamodb";
 import creds from "frontend/src/credentials.json";
+import NavBar from "./components/NavBar";
+import SongList, { Song } from "./components/SongList";
 
 interface QueryParams {
   artist: string;
@@ -24,8 +26,8 @@ interface QueryParams {
   year: number;
 }
 
-type QueryResults = ScanCommandOutput | QueryCommandOutput | { Count: number };
-const QUERY_RESULT_DEFAULT = {Count: -1};
+type QueryResults = ScanCommandOutput | QueryCommandOutput | { Count: number, Items: Array<Song> };
+const QUERY_RESULT_DEFAULT = {Count: -1, Items: []};
 
 export default function App() {
   const [queryResults, setQueryResults] = useState<QueryResults>(QUERY_RESULT_DEFAULT);
@@ -106,19 +108,19 @@ export default function App() {
             <form onSubmit={handleSubmit((data) => handleQuery(data))}>
               <div className="query-field">
                 <label htmlFor="artist">Artist</label>
-                <input {...register("artist")} id="artist" type="text" />
+                <input {...register("artist")} className="form-control" id="artist" type="text" />
               </div>
               <div className="query-field">
                 <label htmlFor="title">Title</label>
-                <input {...register("title")} id="title" type="text" />
+                <input {...register("title")} className="form-control" id="title" type="text" />
               </div>
               <div className="query-field">
                 <label htmlFor="album">Album</label>
-                <input {...register("album")} id="album" type="text" />
+                <input {...register("album")} className="form-control" id="album" type="text" />
               </div>
               <div className="query-field">
                 <label htmlFor="year">Year</label>
-                <input {...register("year")} id="year" type="number" />
+                <input {...register("year")} className="form-control" id="year" type="number" />
               </div>
               <button type="submit" className="btn btn-info">
                 Query
@@ -132,7 +134,15 @@ export default function App() {
             <div className="query-results">
               {queryResults === QUERY_RESULT_DEFAULT && "Enter at least one field and press query to search for music"}
               {queryResults?.Count === 0 && "No result is retrieved. Please query again"}
-              {(queryResults.Count && queryResults.Count > 0) && "Show results here"}
+              {
+                (queryResults.Count && queryResults.Count > 0 && queryResults.Items) && 
+                <SongList songs={queryResults.Items} />
+                // queryResults.Items.map((song) => {
+                //   return (
+                //     <SongList songs={song} />
+                //   )
+                // })
+              }
             </div>
           </div>
 
@@ -145,23 +155,7 @@ export default function App() {
   );
 }
 
-const NavBar = ({ handleLogout }: any) => {
-  const username = localStorage.getItem(USER_KEY);
-  return (
-    <div className="navbar py-3 px-5">
-      <div className="left d-flex gap-3">
-        <Link to="/login">Login</Link>
-        <Link to="/register">Register</Link>
-      </div>
-      <div className="right d-flex gap-3">
-        <span>{username}</span>
-        <button className="btn btn-danger" onClick={handleLogout}>
-          Logout
-        </button>
-      </div>
-    </div>
-  );
-};
+
 
 // music table has PK title and SK album
 // current GSI created are:
