@@ -2,7 +2,7 @@ import { createContext, useContext, useState } from "react";
 
 type AuthContextType = {
   isAuthenticated: boolean;
-  login: (username: string) => void;
+  login: (username: string, email: string) => void;
   logout: () => void;
 };
 
@@ -15,9 +15,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   });
   
 
-  const login = (username: string) => {
+  const login = (username: string, email: string) => {
     setIsAuthenticated(true);
-    localStorage.setItem(USER_KEY, username);
+    localStorage.setItem(USER_KEY, JSON.stringify({username, email}));
   };
 
   const logout = () => {

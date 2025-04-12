@@ -7,7 +7,7 @@
 }
 
 .navbar {
-  background-color: rgba(227, 227, 186, 0.933);
+  background-color: rgba(225, 250, 217, 0.933);
 }
 
 .home-page {
@@ -41,12 +41,14 @@
   flex: 1;
 }
 
+.submit-query-btn {
+  grid-column: 1 / span 2;
+}
+
 .query-results {
   display: flex;
   flex-direction: column;
 
   flex: 1;
-  border: solid 1px #888;
   /* overflow-y: scroll; */
-
 }

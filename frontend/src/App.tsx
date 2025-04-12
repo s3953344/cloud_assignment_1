@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useAuth, USER_KEY } from "./context/AuthContext";
-import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "./context/AuthContext";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 
 import "./App.css";
@@ -105,7 +105,7 @@ export default function App() {
         <div className="even-columns">
           <div className="query-area">
             <h2>Query</h2>
-            <form onSubmit={handleSubmit((data) => handleQuery(data))}>
+            <form className="mb-4" onSubmit={handleSubmit((data) => handleQuery(data))}>
               <div className="query-field">
                 <label htmlFor="artist">Artist</label>
                 <input {...register("artist")} className="form-control" id="artist" type="text" />
@@ -122,7 +122,7 @@ export default function App() {
                 <label htmlFor="year">Year</label>
                 <input {...register("year")} className="form-control" id="year" type="number" />
               </div>
-              <button type="submit" className="btn btn-info">
+              <button type="submit" className="submit-query-btn btn btn-info">
                 Query
               </button>
               <div className="error-message">
@@ -131,17 +131,12 @@ export default function App() {
                 }
               </div>
             </form>
-            <div className="query-results">
+            <div className="query-results | px-2 border">
               {queryResults === QUERY_RESULT_DEFAULT && "Enter at least one field and press query to search for music"}
               {queryResults.Count === 0 && "No result is retrieved. Please query again"}
               {
-                (queryResults.Count && queryResults.Count > 0 && queryResults.Items) && 
+                (queryResults.Count! > 0 && queryResults.Items) && 
                 <SongList songs={queryResults.Items} />
-                // queryResults.Items.map((song) => {
-                //   return (
-                //     <SongList songs={song} />
-                //   )
-                // })
               }
             </div>
           </div>

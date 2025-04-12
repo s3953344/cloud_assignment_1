@@ -45,7 +45,7 @@ export default function LoginPage() {
         // console.log(response);
         console.log("Login successful!");
         setErrorMsg("");
-        login(response.Item?.user_name);
+        login(response.Item?.user_name, response.Item?.email);
         navigate("/");
       } else {
         setErrorMsg("Login failed. Username or password is incorrect.");
