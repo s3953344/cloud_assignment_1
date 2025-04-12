@@ -133,7 +133,7 @@ export default function App() {
             </form>
             <div className="query-results">
               {queryResults === QUERY_RESULT_DEFAULT && "Enter at least one field and press query to search for music"}
-              {queryResults?.Count === 0 && "No result is retrieved. Please query again"}
+              {queryResults.Count === 0 && "No result is retrieved. Please query again"}
               {
                 (queryResults.Count && queryResults.Count > 0 && queryResults.Items) && 
                 <SongList songs={queryResults.Items} />
