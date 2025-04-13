@@ -1,9 +1,3 @@
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import {
-  DynamoDBDocumentClient,
-  PutCommand,
-} from "@aws-sdk/lib-dynamodb";
-import creds from "frontend/src/credentials.json";
 import { API_URL, USER_KEY } from "../context/AuthContext";
 import { useEffect, useState } from "react";
 import { Subscription } from "./SubscribedList";
@@ -40,13 +34,6 @@ function SongItem({ song, subscriptions, setSubscriptions }: SongItemProps) {
   const last = parts?.[parts.length - 1];
   const fullUrl = S3_URL + last;
 
-  const client = new DynamoDBClient({
-    region: "us-east-1",
-    credentials: creds,
-  });
-  // Create the DynamoDB Document Client
-  const docClient = DynamoDBDocumentClient.from(client);
-
   // check if already subscribed, and if so, disable subscribe button
   useEffect(() => {
     const isAlreadySubscribed = subscriptions.some(sub => 
@@ -75,11 +62,6 @@ function SongItem({ song, subscriptions, setSubscriptions }: SongItemProps) {
           year: song.year,
           img_url: song.img_url,
       }
-      // const command = new PutCommand({
-      //   TableName: "subscription",
-      //   Item: subscription,
-      // })
-      // const response = await docClient.send(command);
       setDisableSubscribe(true);
       const putResponse = await axios.post(API_URL, {
         type: "updateSubscription",

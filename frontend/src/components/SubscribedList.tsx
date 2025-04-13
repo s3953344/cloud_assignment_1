@@ -1,9 +1,3 @@
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import {
-  DynamoDBDocumentClient,
-  DeleteCommand,
-} from "@aws-sdk/lib-dynamodb";
-import creds from "frontend/src/credentials.json";
 import { API_URL, USER_KEY } from "../context/AuthContext";
 import { useState } from "react";
 import axios from "axios";
@@ -34,13 +28,6 @@ function SubscriptionItem({ subscription, setSubscriptions }: { subscription: Su
   const last = parts?.[parts.length - 1];
   const fullUrl = S3_URL + last;
 
-  const client = new DynamoDBClient({
-    region: "us-east-1",
-    credentials: creds,
-  });
-  // Create the DynamoDB Document Client
-  const docClient = DynamoDBDocumentClient.from(client);
-
   const handleUnubscribe = async () => {
     try {
       // user must be logged in
@@ -50,23 +37,6 @@ function SubscriptionItem({ subscription, setSubscriptions }: { subscription: Su
         return;
       }
 
-      // const command = new DeleteCommand({
-      //   TableName: "subscription",
-      //   Key: {
-      //     email: subscription.email,
-      //     SK: subscription.SK,
-      //   },
-      // });
-      // const command = {
-      //   TableName: "subscription",
-      //   Key: {
-      //     email: subscription.email,
-      //     SK: subscription.SK,
-      //   },
-      // };
-
-      // console.log(command);
-      // const response = await docClient.send(command);
       setDisableUnsubscribe(true);
       const response = await axios.post(API_URL, {
         type: "deleteSubscription",

@@ -43,15 +43,6 @@ export default function RegisterPage() {
         return;
       }
 
-      // if email is unique, put request
-      // const putCommand = new PutCommand({
-      //   TableName: "login",
-      //   Item: {
-      //     email: data.email,
-      //     user_name: data.user_name,
-      //     password: data.password,
-      //   },
-      // });
       const putResponse = await axios.post(API_URL, {
         type: "registerUser",
         item: {
