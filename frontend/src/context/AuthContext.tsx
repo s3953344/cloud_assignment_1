@@ -11,28 +11,27 @@ export const USER_KEY = "USER";
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return localStorage.getItem(USER_KEY) !== null;
+    return sessionStorage.getItem(USER_KEY) !== null;
   });
   
-
   const login = (username: string, email: string) => {
     setIsAuthenticated(true);
-    localStorage.setItem(USER_KEY, JSON.stringify({username, email}));
+    sessionStorage.setItem(USER_KEY, JSON.stringify({ username, email }));
   };
-
+  
   const logout = () => {
     setIsAuthenticated(false);
-    localStorage.removeItem(USER_KEY);
+    sessionStorage.removeItem(USER_KEY);
   };
 
-  useEffect(() => {
-    const handleUnload = () => {
-      // Optional: Clear auth info on unload if using session-based auth
-      logout();
-    };
-    window.addEventListener("beforeunload", handleUnload);
-    return () => window.removeEventListener("beforeunload", handleUnload);
-  }, []);
+  // useEffect(() => {
+  //   const handleUnload = () => {
+  //     // Optional: Clear auth info on unload if using session-based auth
+  //     logout();
+  //   };
+  //   window.addEventListener("beforeunload", handleUnload);
+  //   return () => window.removeEventListener("beforeunload", handleUnload);
+  // }, []);
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, login, logout }}>

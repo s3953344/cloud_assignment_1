@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { USER_KEY } from "../context/AuthContext";
 
 const NavBar = ({ handleLogout }: any) => {
-  const user = localStorage.getItem(USER_KEY)!
+  const user = sessionStorage.getItem(USER_KEY)!
   if (!user) return;
   const username = JSON.parse(user).username;
   return (

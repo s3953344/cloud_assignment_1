@@ -67,7 +67,7 @@ export default function App() {
 
     const fetchSubscriptions = async () => {
       try {
-        const userObj = localStorage.getItem(USER_KEY);
+        const userObj = sessionStorage.getItem(USER_KEY);
         if (!userObj) {
           return;
         }
@@ -204,8 +204,6 @@ export default function App() {
           <div className="subscription-area">
             <h2>Subscriptions</h2>
             <div className="subscription-results | px-2 border">
-              {subscriptionResults === SUB_RESULT_DEFAULT &&
-                "No current music subscriptions. Search for music to subscribe to on your left!"}
               {subscriptionResults.length === 0 &&
                 "No result is retrieved. Subscribe to some music first!"}
               {subscriptionResults.length > 0 && (

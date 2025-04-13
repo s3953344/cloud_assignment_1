@@ -45,7 +45,7 @@ function SongItem({ song }: { song: Song }) {
   const handleSubscribe = async () => {
     try {
       // user must be logged in
-      const user = localStorage.getItem(USER_KEY);
+      const user = sessionStorage.getItem(USER_KEY);
       if (!user) { 
         console.log("User must be logged in to subscribe!")
         return;
