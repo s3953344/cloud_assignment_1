@@ -21,7 +21,7 @@ def format_response(status_code, body_dict):
         "headers": {
             "Access-Control-Allow-Headers": "Content-Type",
             "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "*"
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS"
         },
         "body": body_dict
     }

@@ -4,9 +4,10 @@ import {
   PutCommand,
 } from "@aws-sdk/lib-dynamodb";
 import creds from "frontend/src/credentials.json";
-import { USER_KEY } from "../context/AuthContext";
+import { API_URL, USER_KEY } from "../context/AuthContext";
 import { useEffect, useState } from "react";
 import { Subscription } from "./SubscribedList";
+import axios from "axios";
 
 export type Song = {
   year?: string;
@@ -74,19 +75,25 @@ function SongItem({ song, subscriptions, setSubscriptions }: SongItemProps) {
           year: song.year,
           img_url: song.img_url,
       }
-      const command = new PutCommand({
-        TableName: "subscription",
-        Item: subscription,
-      })
-      const response = await docClient.send(command);
+      // const command = new PutCommand({
+      //   TableName: "subscription",
+      //   Item: subscription,
+      // })
+      // const response = await docClient.send(command);
+      setDisableSubscribe(true);
+      const putResponse = await axios.post(API_URL, {
+        type: "updateSubscription",
+        item: subscription,
+      });
       console.log("Put new subscription")
-      console.log(response);
-      if (response.$metadata.httpStatusCode === 200) {
+      console.log(putResponse);
+      if (putResponse.data.statusCode == 200) {
         setDisableSubscribe(true);
         setSubscriptions(prev => [...prev, subscription]);
       }
     } catch (error) {
       console.error("Error putting subscription data:", error);
+      setDisableSubscribe(false);
     }
   }
 

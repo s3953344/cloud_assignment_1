@@ -4,8 +4,9 @@ import {
   DeleteCommand,
 } from "@aws-sdk/lib-dynamodb";
 import creds from "frontend/src/credentials.json";
-import { USER_KEY } from "../context/AuthContext";
+import { API_URL, USER_KEY } from "../context/AuthContext";
 import { useState } from "react";
+import axios from "axios";
 
 export type Subscription = {
   email?: string;
@@ -49,18 +50,32 @@ function SubscriptionItem({ subscription, setSubscriptions }: { subscription: Su
         return;
       }
 
-      const command = new DeleteCommand({
-        TableName: "subscription",
-        Key: {
-          email: subscription.email,
-          SK: subscription.SK,
-        },
+      // const command = new DeleteCommand({
+      //   TableName: "subscription",
+      //   Key: {
+      //     email: subscription.email,
+      //     SK: subscription.SK,
+      //   },
+      // });
+      // const command = {
+      //   TableName: "subscription",
+      //   Key: {
+      //     email: subscription.email,
+      //     SK: subscription.SK,
+      //   },
+      // };
+
+      // console.log(command);
+      // const response = await docClient.send(command);
+      setDisableUnsubscribe(true);
+      const response = await axios.post(API_URL, {
+        type: "deleteSubscription",
+        email: subscription.email,
+        SK: subscription.SK
       });
-      console.log(command);
-      const response = await docClient.send(command);
       console.log("Remove subscription");
       console.log(response);
-      if (response.$metadata.httpStatusCode === 200) {
+      if (response.data.statusCode == 200) {
         setDisableUnsubscribe(true);
         setSubscriptions(prev =>
           prev.filter(s => !(s.email === subscription.email && s.SK === subscription.SK))
@@ -68,6 +83,7 @@ function SubscriptionItem({ subscription, setSubscriptions }: { subscription: Su
       }
     } catch (error) {
       console.error("Error unsubscribing:", error);
+      setDisableUnsubscribe(false);
     }
   };
 

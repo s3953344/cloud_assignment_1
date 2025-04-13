@@ -1,5 +1,5 @@
 import { FieldValues, useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./formValidation.css";
 
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
@@ -140,6 +140,9 @@ export default function RegisterPage() {
           Register
         </button>
       </form>
+      <span>
+        Already have an account? <Link to="/login">Login</Link>
+      </span>
     </div>
   );
 }
