@@ -3,9 +3,11 @@ import { useNavigate } from "react-router-dom";
 import "./formValidation.css";
 
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
 import creds from "frontend/src/credentials.json";
 import { useState } from "react";
+import axios from "axios";
+import { API_URL } from "../context/AuthContext";
 
 // regex from https://regexr.com/3e48o
 const emailPattern = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
@@ -42,17 +44,24 @@ export default function RegisterPage() {
       }
 
       // if email is unique, put request
-      const putCommand = new PutCommand({
-        TableName: "login",
-        Item: {
+      // const putCommand = new PutCommand({
+      //   TableName: "login",
+      //   Item: {
+      //     email: data.email,
+      //     user_name: data.user_name,
+      //     password: data.password,
+      //   },
+      // });
+      const putResponse = await axios.post(API_URL, {
+        type: "registerUser",
+        item: {
           email: data.email,
           user_name: data.user_name,
           password: data.password,
         },
       });
-      const putResponse = await docClient.send(putCommand);
       console.log(putResponse);
-      if (putResponse.$metadata.httpStatusCode == 200) {
+      if (putResponse.data.statusCode == 200) {
         setErrorMsg("");
         alert("Registration success!");
         navigate("/login");

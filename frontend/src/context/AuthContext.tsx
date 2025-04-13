@@ -8,6 +8,7 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const USER_KEY = "USER";
+export const API_URL = "https://5pv86sg695.execute-api.us-east-1.amazonaws.com/Production/MusicSubscriptionAPILambda";
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
