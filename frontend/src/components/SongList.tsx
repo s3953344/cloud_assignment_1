@@ -10,7 +10,7 @@ import {
 } from "@aws-sdk/lib-dynamodb";
 import creds from "frontend/src/credentials.json";
 import { USER_KEY } from "../context/AuthContext";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Subscription } from "./SubscribedList";
 
 export type Song = {
@@ -23,6 +23,13 @@ export type Song = {
 
 type SongListProps = {
   songs: Song[],
+  subscriptions: Subscription[],
+  setSubscriptions: React.Dispatch<React.SetStateAction<Subscription[]>>,
+};
+
+type SongItemProps = {
+  song: Song,
+  subscriptions: Subscription[],
   setSubscriptions: React.Dispatch<React.SetStateAction<Subscription[]>>,
 };
 
@@ -30,7 +37,7 @@ type SongListProps = {
 // read-only public access
 // https://docs.aws.amazon.com/AmazonS3/latest/userguide/example-bucket-policies.html#example-bucket-policies-anonymous-user
 
-function SongItem({ song, setSubscriptions }: { song: Song, setSubscriptions: React.Dispatch<React.SetStateAction<Subscription[]>> }) {
+function SongItem({ song, subscriptions, setSubscriptions }: SongItemProps) {
   const [disableSubscribe, setDisableSubscribe] = useState<boolean>(false);
   const S3_URL = "https://song-images-s3953344.s3.us-east-1.amazonaws.com/";
   const parts = song.img_url?.split("/");
@@ -43,6 +50,14 @@ function SongItem({ song, setSubscriptions }: { song: Song, setSubscriptions: Re
   });
   // Create the DynamoDB Document Client
   const docClient = DynamoDBDocumentClient.from(client);
+
+  // check if already subscribed, and if so, disable subscribe button
+  useEffect(() => {
+    const isAlreadySubscribed = subscriptions.some(sub => 
+      sub.title === song.title && sub.album === song.album
+    );
+    setDisableSubscribe(isAlreadySubscribed);
+  }, [subscriptions, song]);
 
   const handleSubscribe = async () => {
     try {
@@ -104,11 +119,11 @@ function SongItem({ song, setSubscriptions }: { song: Song, setSubscriptions: Re
 }
 
 // const SongList: React.FC<SongListProps> = ({ songs }) => {
-function SongList({ songs, setSubscriptions }: SongListProps) {
+function SongList({ songs, subscriptions, setSubscriptions }: SongListProps) {
   return (
     <div className="container my-4">
       {songs.map((song) => {
-        return <SongItem key={createSongKey(song.title!, song.album!)} song={song} setSubscriptions={setSubscriptions}/>
+        return <SongItem key={createSongKey(song.title!, song.album!)} song={song} subscriptions={subscriptions} setSubscriptions={setSubscriptions}/>
       })}
     </div>
   );

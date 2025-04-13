@@ -199,7 +199,7 @@ export default function App() {
               {/* {queryResults.length === 0 &&
                 "No result is retrieved. Please query again"} */}
               {queryResults.length > 0 && (
-                <SongList songs={queryResults} setSubscriptions={setSubscriptionResults}/>
+                <SongList songs={queryResults} subscriptions={subscriptionResults} setSubscriptions={setSubscriptionResults}/>
               )}
             </div>
           </div>
