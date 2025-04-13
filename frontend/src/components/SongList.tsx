@@ -11,6 +11,7 @@ import {
 import creds from "frontend/src/credentials.json";
 import { USER_KEY } from "../context/AuthContext";
 import { useState } from "react";
+import { Subscription } from "./SubscribedList";
 
 export type Song = {
   year?: string;
@@ -21,14 +22,15 @@ export type Song = {
 };
 
 type SongListProps = {
-  songs: Song[];
+  songs: Song[],
+  setSubscriptions: React.Dispatch<React.SetStateAction<Subscription[]>>,
 };
 
 // S3 bucket image permissions
 // read-only public access
 // https://docs.aws.amazon.com/AmazonS3/latest/userguide/example-bucket-policies.html#example-bucket-policies-anonymous-user
 
-function SongItem({ song }: { song: Song }) {
+function SongItem({ song, setSubscriptions }: { song: Song, setSubscriptions: React.Dispatch<React.SetStateAction<Subscription[]>> }) {
   const [disableSubscribe, setDisableSubscribe] = useState<boolean>(false);
   const S3_URL = "https://song-images-s3953344.s3.us-east-1.amazonaws.com/";
   const parts = song.img_url?.split("/");
@@ -52,9 +54,7 @@ function SongItem({ song }: { song: Song }) {
       }
       const userEmail = JSON.parse(user).email;
   
-      const command = new PutCommand({
-        TableName: "subscription",
-        Item: {
+      const subscription = {
           email: userEmail,
           // title::album creates the song primary key
           SK: createSongKey(song.title!, song.album!),
@@ -63,13 +63,17 @@ function SongItem({ song }: { song: Song }) {
           artist: song.artist,
           year: song.year,
           img_url: song.img_url,
-        }
+      }
+      const command = new PutCommand({
+        TableName: "subscription",
+        Item: subscription,
       })
       const response = await docClient.send(command);
       console.log("Put new subscription")
       console.log(response);
       if (response.$metadata.httpStatusCode === 200) {
         setDisableSubscribe(true);
+        setSubscriptions(prev => [...prev, subscription]);
       }
     } catch (error) {
       console.error("Error putting subscription data:", error);
@@ -100,11 +104,11 @@ function SongItem({ song }: { song: Song }) {
 }
 
 // const SongList: React.FC<SongListProps> = ({ songs }) => {
-function SongList({ songs }: SongListProps) {
+function SongList({ songs, setSubscriptions }: SongListProps) {
   return (
     <div className="container my-4">
       {songs.map((song) => {
-        return <SongItem key={createSongKey(song.title!, song.album!)} song={song}/>
+        return <SongItem key={createSongKey(song.title!, song.album!)} song={song} setSubscriptions={setSubscriptions}/>
       })}
     </div>
   );
