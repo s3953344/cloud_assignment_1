@@ -1,11 +1,6 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
   DynamoDBDocumentClient,
-  QueryCommand,
-  ScanCommand,
-  QueryCommandInput,
-  ScanCommandOutput,
-  QueryCommandOutput,
   PutCommand,
 } from "@aws-sdk/lib-dynamodb";
 import creds from "frontend/src/credentials.json";
@@ -118,7 +113,6 @@ function SongItem({ song, subscriptions, setSubscriptions }: SongItemProps) {
   );
 }
 
-// const SongList: React.FC<SongListProps> = ({ songs }) => {
 function SongList({ songs, subscriptions, setSubscriptions }: SongListProps) {
   return (
     <div className="container my-4">

@@ -1,12 +1,6 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
   DynamoDBDocumentClient,
-  QueryCommand,
-  ScanCommand,
-  QueryCommandInput,
-  ScanCommandOutput,
-  QueryCommandOutput,
-  PutCommand,
   DeleteCommand,
 } from "@aws-sdk/lib-dynamodb";
 import creds from "frontend/src/credentials.json";
@@ -68,7 +62,6 @@ function SubscriptionItem({ subscription, setSubscriptions }: { subscription: Su
       console.log(response);
       if (response.$metadata.httpStatusCode === 200) {
         setDisableUnsubscribe(true);
-        // TODO: remove the item from subscriptionResults!
         setSubscriptions(prev =>
           prev.filter(s => !(s.email === subscription.email && s.SK === subscription.SK))
         );
@@ -122,10 +115,5 @@ function SubscriptionList({ subscriptions, setSubscriptions }: SubscriptionListP
     </div>
   );
 }
-
-// // title::album creates the song primary key
-// function createSongKey(title: string, album: string) {
-//   return `${title}::${album}`;
-// }
 
 export default SubscriptionList;

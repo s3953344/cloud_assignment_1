@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useState } from "react";
 
 type AuthContextType = {
   isAuthenticated: boolean;
@@ -23,15 +23,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setIsAuthenticated(false);
     sessionStorage.removeItem(USER_KEY);
   };
-
-  // useEffect(() => {
-  //   const handleUnload = () => {
-  //     // Optional: Clear auth info on unload if using session-based auth
-  //     logout();
-  //   };
-  //   window.addEventListener("beforeunload", handleUnload);
-  //   return () => window.removeEventListener("beforeunload", handleUnload);
-  // }, []);
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, login, logout }}>

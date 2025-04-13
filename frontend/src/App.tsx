@@ -12,8 +12,6 @@ import {
   QueryCommand,
   ScanCommand,
   QueryCommandInput,
-  ScanCommandOutput,
-  QueryCommandOutput,
 } from "@aws-sdk/lib-dynamodb";
 import creds from "frontend/src/credentials.json";
 import NavBar from "./components/NavBar";
@@ -27,29 +25,19 @@ interface QueryParams {
   year: number;
 }
 
-// type QueryResults =
-//   | ScanCommandOutput
-//   | QueryCommandOutput
-//   | { Count: number; Items: Array<Song> };
-// type SubscriptionResults =
-//   | QueryCommandOutput
-//   | { Count: number; Items: Array<Subscription> };
-// const QUERY_RESULT_DEFAULT = { Count: -1, Items: [] };
 const QUERY_RESULT_DEFAULT: Song[] = [];
 const SUB_RESULT_DEFAULT: Subscription[] = [];
 
 export default function App() {
-  const [subscriptionResults, setSubscriptionResults] = useState<Subscription[]>(SUB_RESULT_DEFAULT);
-  const [queryResults, setQueryResults] = useState<Song[]>(QUERY_RESULT_DEFAULT);
+  const [subscriptionResults, setSubscriptionResults] =
+    useState<Subscription[]>(SUB_RESULT_DEFAULT);
+  const [queryResults, setQueryResults] =
+    useState<Song[]>(QUERY_RESULT_DEFAULT);
   const [queryError, setQueryError] = useState<string>("");
 
   const { isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<QueryParams>();
+  const { register, handleSubmit } = useForm<QueryParams>();
 
   const client = new DynamoDBClient({
     region: "us-east-1",
@@ -66,10 +54,8 @@ export default function App() {
 
     const fetchSubscriptions = async () => {
       try {
-        const userObj = sessionStorage.getItem(USER_KEY);
-        if (!userObj) {
-          return;
-        }
+        if (!isAuthenticated) return; // super just in case!
+        const userObj = sessionStorage.getItem(USER_KEY)!;
         const email = JSON.parse(userObj).email;
         const getSubsCommand = new QueryCommand({
           TableName: "subscription",
@@ -124,7 +110,6 @@ export default function App() {
 
       const response = await docClient.send(command);
       console.log(response);
-      // return response;
       if (response.Items === undefined) {
         setQueryResults(QUERY_RESULT_DEFAULT);
       } else {
@@ -148,7 +133,9 @@ export default function App() {
         <div className="even-columns">
           <div className="query-area">
             <h2>Query</h2>
-            <small className="mb-4">Please note, search is case sensitive!</small>
+            <small className="mb-4">
+              Please note, search is case sensitive!
+            </small>
             <form
               className="mb-4"
               onSubmit={handleSubmit((data) => handleQuery(data))}
@@ -196,10 +183,12 @@ export default function App() {
             <div className="query-results | px-2 border">
               {queryResults === QUERY_RESULT_DEFAULT &&
                 "No result is retrieved. Please query again"}
-              {/* {queryResults.length === 0 &&
-                "No result is retrieved. Please query again"} */}
               {queryResults.length > 0 && (
-                <SongList songs={queryResults} subscriptions={subscriptionResults} setSubscriptions={setSubscriptionResults}/>
+                <SongList
+                  songs={queryResults}
+                  subscriptions={subscriptionResults}
+                  setSubscriptions={setSubscriptionResults}
+                />
               )}
             </div>
           </div>
@@ -210,7 +199,10 @@ export default function App() {
               {subscriptionResults.length === 0 &&
                 "No result is retrieved. Subscribe to some music first!"}
               {subscriptionResults.length > 0 && (
-                <SubscriptionList subscriptions={subscriptionResults} setSubscriptions={setSubscriptionResults}  />
+                <SubscriptionList
+                  subscriptions={subscriptionResults}
+                  setSubscriptions={setSubscriptionResults}
+                />
               )}
             </div>
           </div>
@@ -230,7 +222,9 @@ const createQueryCommand = (data: QueryParams) => {
     TableName: "music",
   };
 
-  // if a title is supplied, always use that to search
+  // if a title is supplied, always use that to query
+  // because titles are not likely to be the same,
+  // fully utilises hashing and reduces the amount dynamodb has to scan
   if (data.title) {
     console.log("Using base table query");
     command.KeyConditionExpression = "title = :titleVal";
@@ -243,8 +237,10 @@ const createQueryCommand = (data: QueryParams) => {
     if (data.artist) {
       command.FilterExpression = "artist = :artistVal";
       command.ExpressionAttributeValues[":artistVal"] = data.artist;
-      // command.ExpressionAttributeValues
     }
+    // I anticipate artist as the next most-queried attribute.
+    // so I made a GSI for it. SK is so titles are returned sorted
+    // so user can find the songs they want faster
   } else if (data.artist) {
     console.log("Using artist index");
     command.IndexName = "artist-title-index";
@@ -255,13 +251,14 @@ const createQueryCommand = (data: QueryParams) => {
       command.FilterExpression = "album = :albumVal";
       command.ExpressionAttributeValues[":albumVal"] = data.album;
     }
+    // next most queried attribute i anticipate to be album
   } else if (data.album) {
     console.log("Using album index");
     command.IndexName = "album-title-index";
     command.KeyConditionExpression = "album = :albumVal";
     command.ExpressionAttributeValues = { ":albumVal": data.album };
   }
-
+  // add year as a filter if provided
   if (data.year) {
     command.FilterExpression = "#year = :yearVal";
     command.ExpressionAttributeValues![":yearVal"] = data.year;
@@ -272,7 +269,9 @@ const createQueryCommand = (data: QueryParams) => {
   return new QueryCommand(command);
 };
 
-// if ONLY year is queried
+// if ONLY year is queried, scan the table
+// i don't think anyone is searching just for the year very often
+// so no GSI created for this to avoid over-indexing
 const createScanCommand = (data: QueryParams) => {
   console.log("Using table scan");
   return new ScanCommand({

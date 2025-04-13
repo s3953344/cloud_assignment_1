@@ -4,8 +4,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
 import creds from "frontend/src/credentials.json";
-import { useContext, useEffect, useState } from "react";
-import { AuthProvider, useAuth } from "../context/AuthContext";
+import { useState } from "react";
+import { useAuth } from "../context/AuthContext";
 import "./formValidation.css";
 
 // regex from https://regexr.com/3e48o
@@ -22,7 +22,6 @@ export default function LoginPage() {
     formState: { errors },
   } = useForm();
 
-  // const client = new DynamoDBClient({region: "us-east-1", "credentials": creds});
   const client = new DynamoDBClient({
     region: "us-east-1",
     credentials: creds,
@@ -52,7 +51,6 @@ export default function LoginPage() {
       }
     } catch (error) {
       console.error("Error fetching data:", error);
-      // TODO: set error message
       setErrorMsg(`Error fetching data: ${error}`);
     }
   };
