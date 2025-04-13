@@ -27,21 +27,20 @@ interface QueryParams {
   year: number;
 }
 
-type QueryResults =
-  | ScanCommandOutput
-  | QueryCommandOutput
-  | { Count: number; Items: Array<Song> };
+// type QueryResults =
+//   | ScanCommandOutput
+//   | QueryCommandOutput
+//   | { Count: number; Items: Array<Song> };
 // type SubscriptionResults =
 //   | QueryCommandOutput
 //   | { Count: number; Items: Array<Subscription> };
-const QUERY_RESULT_DEFAULT = { Count: -1, Items: [] };
+// const QUERY_RESULT_DEFAULT = { Count: -1, Items: [] };
+const QUERY_RESULT_DEFAULT: Song[] = [];
 const SUB_RESULT_DEFAULT: Subscription[] = [];
 
 export default function App() {
-  const [subscriptionResults, setSubscriptionResults] =
-    useState<Subscription[]>(SUB_RESULT_DEFAULT);
-  const [queryResults, setQueryResults] =
-    useState<QueryResults>(QUERY_RESULT_DEFAULT);
+  const [subscriptionResults, setSubscriptionResults] = useState<Subscription[]>(SUB_RESULT_DEFAULT);
+  const [queryResults, setQueryResults] = useState<Song[]>(QUERY_RESULT_DEFAULT);
   const [queryError, setQueryError] = useState<string>("");
 
   const { isAuthenticated, logout } = useAuth();
@@ -80,7 +79,7 @@ export default function App() {
         const response = await docClient.send(getSubsCommand);
         console.log(response);
         if (response.Items === undefined) {
-          setSubscriptionResults([]);
+          setSubscriptionResults(SUB_RESULT_DEFAULT);
         } else {
           setSubscriptionResults(response.Items);
         }
@@ -126,8 +125,12 @@ export default function App() {
       const response = await docClient.send(command);
       console.log(response);
       // return response;
-      setQueryResults(response);
-      setQueryError("");
+      if (response.Items === undefined) {
+        setQueryResults(QUERY_RESULT_DEFAULT);
+      } else {
+        setQueryResults(response.Items);
+        setQueryError("");
+      }
     } catch (error) {
       console.error("Error fetching song data:", error);
       setQueryResults(QUERY_RESULT_DEFAULT);
@@ -192,11 +195,11 @@ export default function App() {
             </form>
             <div className="query-results | px-2 border">
               {queryResults === QUERY_RESULT_DEFAULT &&
-                "Enter at least one field and press query to search for music"}
-              {queryResults.Count === 0 &&
                 "No result is retrieved. Please query again"}
-              {queryResults.Count! > 0 && queryResults.Items && (
-                <SongList songs={queryResults.Items} />
+              {/* {queryResults.length === 0 &&
+                "No result is retrieved. Please query again"} */}
+              {queryResults.length > 0 && (
+                <SongList songs={queryResults} />
               )}
             </div>
           </div>
